@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Nexus Task Dashboard — Manage your tasks with style and precision.">
+  <title>Dashboard — Nexus Task</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* Inline overrides for task count computation from Jinja */
+    .nav-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; border-radius: 9px;
+      background: var(--primary); color: white;
+      font-size: 10px; font-weight: 700; padding: 0 5px;
+      margin-left: auto; flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== ANIMATED BACKGROUND ===== -->
+  <div class="bg-canvas">
+    <div class="bg-gradient-mesh"></div>
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
+  </div>
+  <canvas id="particle-canvas"></canvas>
+  <div class="cursor-glow"></div>
+
+  <!-- ===== APP LAYOUT ===== -->
+  <div class="app-layout">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Logo -->
+      <a href="/" class="sidebar-logo" title="Nexus Task">
+        <div class="sidebar-logo-icon">⚡</div>
+        <span class="sidebar-logo-text">Nexus Task</span>
+      </a>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-title">Workspace</div>
+
+        <a href="{{ url_for('tasks') }}" class="nav-item active" title="My Tasks">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span class="nav-label">My Tasks</span>
+          <span class="nav-badge">{{ tasks|length }}</span>
+        </a>
+
+        <a href="{{ url_for('add_task') }}" class="nav-item" title="Add Task">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span class="nav-label">Add Task</span>
+        </a>
+
+        <div class="sidebar-section-title" style="margin-top:var(--space-lg);">Overview</div>
+
+        <div class="nav-item" style="cursor:default;" title="Stats">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span class="nav-label">Analytics</span>
+        </div>
+
+        <div class="nav-item" style="cursor:default;" title="Calendar">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="nav-label">Calendar</span>
+        </div>
+      </nav>
+
+      <!-- Footer -->
+      <div class="sidebar-footer">
+        <button class="sidebar-toggle" id="sidebar-toggle-btn" title="Collapse sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <a href="{{ url_for('logout') }}" class="nav-item nav-danger" title="Logout">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span class="nav-label">Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content" id="main-content">
+
+      <!-- ===== NAVBAR ===== -->
+      <header class="navbar">
+        <div class="navbar-left">
+          <!-- Mobile hamburger -->
+          <button id="mobile-sidebar-toggle" class="icon-btn" style="display:none;" title="Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span class="navbar-page-title">Dashboard</span>
+        </div>
+
+        <div class="navbar-right">
+          <!-- Search -->
+          <div class="search-wrapper">
+            <input
+              type="text"
+              id="task-search"
+              class="search-input"
+              placeholder="Search tasks..."
+              autocomplete="off"
+            >
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+
+          <!-- Notifications -->
+          <button class="icon-btn" title="Notifications">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notification-badge"></span>
+          </button>
+
+          <!-- Theme toggle -->
+          <button id="theme-toggle" class="icon-btn" title="Toggle theme">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+
+          <!-- Avatar with dropdown -->
+          <div style="position:relative;">
+            <button class="avatar-btn" id="avatar-btn" title="Account">
+              {{ current_user.username[0].upper() }}
+            </button>
+            <div class="avatar-dropdown" id="avatar-dropdown">
+              <div style="padding:8px 12px 10px; border-bottom:1px solid var(--border-subtle); margin-bottom:4px;">
+                <div style="font-weight:700; font-size:13px; color:var(--text-primary);">{{ current_user.username }}</div>
+                <div style="font-size:11px; color:var(--text-muted);">{{ current_user.email }}</div>
+              </div>
+              <a href="{{ url_for('tasks') }}" class="dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Dashboard
+              </a>
+              <a href="{{ url_for('add_task') }}" class="dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                New Task
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="{{ url_for('logout') }}" class="dropdown-item danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign out
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ===== PAGE CONTENT ===== -->
+      <div class="page-content">
+
+        <!-- Welcome Hero -->
+        <div class="welcome-hero">
+          <div class="welcome-greeting" id="greeting-text">Good morning</div>
+          <h1 class="welcome-name">Hello, <span>{{ current_user.username }}</span> 👋</h1>
+          <p class="welcome-subtitle">Here's an overview of your tasks. Stay focused and keep building.</p>
+          <div class="welcome-actions">
+            <a href="{{ url_for('add_task') }}" class="btn btn-primary" id="add-task-hero-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Task
+            </a>
+          </div>
+        </div>
+
+        <!-- ===== STAT CARDS ===== -->
+        {# Compute counts using Jinja2 #}
+        {% set total_count     = tasks|length %}
+        {% set completed_count = tasks|selectattr('status', 'equalto', 'Completed')|list|length %}
+        {% set pending_count   = tasks|rejectattr('status', 'equalto', 'Completed')|list|length %}
+        {% set today_str       = now().strftime('%Y-%m-%d') if now is defined else '' %}
+
+        <div class="stats-grid">
+          <!-- Total Tasks -->
+          <div class="stat-card total" data-tilt>
+            <div class="stat-card-header">
+              <div class="stat-icon-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <span class="stat-trend">All</span>
+            </div>
+            <div class="stat-value" data-target="{{ total_count }}" data-id="total">{{ total_count }}</div>
+            <div class="stat-label">Total Tasks</div>
+            <div class="stat-bar"><div class="stat-bar-fill" data-width="100%" style="width:0%"></div></div>
+          </div>
+
+          <!-- Pending -->
+          <div class="stat-card pending" data-tilt>
+            <div class="stat-card-header">
+              <div class="stat-icon-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <span class="stat-trend" style="background:rgba(245,158,11,0.15);color:var(--warning);">In Progress</span>
+            </div>
+            <div class="stat-value" data-target="{{ pending_count }}" data-id="pending">{{ pending_count }}</div>
+            <div class="stat-label">Pending Tasks</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" data-width="{{ ((pending_count / total_count * 100)|int if total_count > 0 else 0) }}%" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Completed -->
+          <div class="stat-card completed" data-tilt>
+            <div class="stat-card-header">
+              <div class="stat-icon-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <span class="stat-trend" style="background:rgba(16,185,129,0.15);color:var(--success);">Done</span>
+            </div>
+            <div class="stat-value" data-target="{{ completed_count }}" data-id="completed">{{ completed_count }}</div>
+            <div class="stat-label">Completed</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" data-width="{{ ((completed_count / total_count * 100)|int if total_count > 0 else 0) }}%" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Overdue -->
+          <div class="stat-card overdue" data-tilt>
+            <div class="stat-card-header">
+              <div class="stat-icon-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <span class="stat-trend" style="background:rgba(239,68,68,0.15);color:var(--danger);">Alert</span>
+            </div>
+            <div class="stat-value" data-id="overdue" id="overdue-counter">0</div>
+            <div class="stat-label">Overdue</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" id="overdue-bar" data-width="0%" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TASKS SECTION ===== -->
+        <div class="section-header">
+          <div>
+            <div class="section-title">Your Tasks</div>
+            <div class="section-subtitle">{{ tasks|length }} task{{ 's' if tasks|length != 1 else '' }} total</div>
+          </div>
+
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="pending">Pending</button>
+            <button class="filter-tab" data-filter="completed">Completed</button>
+            <button class="filter-tab" data-filter="overdue">Overdue</button>
+          </div>
+        </div>
+
+        <!-- ===== TASK CARDS GRID ===== -->
+        <div class="tasks-grid" id="tasks-grid">
+
+          {% for task in tasks %}
+          {% set is_completed = task.status == 'Completed' %}
+          {% set deadline_str  = task.deadline|string if task.deadline else '' %}
+          <div class="task-card {{ 'completed-task' if is_completed else '' }}"
+               id="task-card-{{ task.id }}"
+               data-id="{{ task.id }}"
+               data-status="{{ task.status }}"
+               data-overdue="false"
+               data-tilt
+               style="animation-delay: {{ loop.index0 * 0.07 }}s;">
+
+            <!-- Top row: priority + actions -->
+            <div class="task-card-top">
+              <span class="task-priority-badge priority-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                Medium
+              </span>
+
+              <div class="task-actions">
+                <!-- Edit Button -->
+                <a href="{{ url_for('edit_task', id=task.id) }}" class="task-action-btn edit" title="Edit task">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </a>
+
+                <!-- Toggle Button (PRESERVED - JS uses .toggle-btn[data-id]) -->
+                <button class="task-action-btn toggle toggle-btn" data-id="{{ task.id }}"
+                  title="{{ 'Mark as Pending' if is_completed else 'Mark as Completed' }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+
+                <!-- Delete Button (PRESERVED - JS uses .delete-btn[data-id]) -->
+                <button class="task-action-btn delete delete-btn" data-id="{{ task.id }}" title="Delete task">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Title -->
+            <div class="task-title">{{ task.title }}</div>
+
+            <!-- Description -->
+            {% if task.description %}
+            <div class="task-description">{{ task.description }}</div>
+            {% endif %}
+
+            <!-- Footer: deadline + status -->
+            <div class="task-footer">
+              <div class="task-meta">
+                {% if task.deadline %}
+                <div class="task-meta-item" data-deadline="{{ deadline_str }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ deadline_str }}
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="task-status-badge {{ 'status-completed' if is_completed else 'status-pending' }}">
+                <span class="status-dot"></span>
+                {{ task.status }}
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="task-progress-wrap">
+              <div class="task-progress-bar">
+                <div class="task-progress-fill" style="width: {{ '100%' if is_completed else '30%' }};"></div>
+              </div>
+            </div>
+
+          </div>
+          {% else %}
+
+          <!-- EMPTY STATE -->
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <div class="empty-title">No tasks yet</div>
+            <div class="empty-subtitle">Create your first task to get started on your productivity journey.</div>
+            <a href="{{ url_for('add_task') }}" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create Your First Task
+            </a>
+          </div>
+
+          {% endfor %}
+        </div>
+
+      </div><!-- /page-content -->
+    </main><!-- /main-content -->
+  </div><!-- /app-layout -->
+
+  <!-- FAB - Floating Add Button -->
+  <a href="{{ url_for('add_task') }}" class="fab" title="Add new task" id="fab-add">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </a>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    // ===== Dashboard-specific initializations =====
+
+    // Time-based greeting
+    (function() {
+      const hour = new Date().getHours();
+      const greetings = {
+        morning:   'Good morning ☀️',
+        afternoon: 'Good afternoon 🌤️',
+        evening:   'Good evening 🌙',
+        night:     'Late night grind 🌟'
+      };
+      let greeting = greetings.morning;
+      if (hour >= 12 && hour < 17) greeting = greetings.afternoon;
+      else if (hour >= 17 && hour < 21) greeting = greetings.evening;
+      else if (hour >= 21 || hour < 5)  greeting = greetings.night;
+      const el = document.getElementById('greeting-text');
+      if (el) el.textContent = greeting;
+    })();
+
+    // Overdue detection (client-side, based on today's date vs deadline)
+    (function() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let overdueCount = 0;
+
+      document.querySelectorAll('.task-card').forEach(card => {
+        if (card.dataset.status === 'Completed') return;
+        const deadlineEl = card.querySelector('[data-deadline]');
+        if (!deadlineEl) return;
+        const dl = deadlineEl.dataset.deadline;
+        if (!dl) return;
+        const deadlineDate = new Date(dl);
+        deadlineDate.setHours(0, 0, 0, 0);
+        if (deadlineDate < today) {
+          card.dataset.overdue = 'true';
+          deadlineEl.classList.add('overdue-item');
+          overdueCount++;
+          // Add subtle red glow to overdue card
+          card.style.boxShadow = '0 0 0 1px rgba(239,68,68,0.2), inset 0 0 30px rgba(239,68,68,0.03)';
+        }
+      });
+
+      // Update overdue stat card
+      const overdueEl = document.getElementById('overdue-counter');
+      if (overdueEl) {
+        overdueEl.dataset.target = overdueCount;
+        overdueEl.textContent = overdueCount;
+      }
+
+      const overdueBar = document.getElementById('overdue-bar');
+      const total = document.querySelectorAll('.task-card').length;
+      if (overdueBar && total > 0) {
+        overdueBar.dataset.width = Math.round(overdueCount / total * 100) + '%';
+      }
+    })();
+
+    // Sidebar toggle wiring
+    document.getElementById('sidebar-toggle-btn')?.addEventListener('click', () => {
+      Sidebar && Sidebar.toggle();
+    });
+
+    // Mobile: show hamburger on small screens
+    if (window.innerWidth <= 768) {
+      const mobileBtn = document.getElementById('mobile-sidebar-toggle');
+      if (mobileBtn) mobileBtn.style.display = 'flex';
+    }
+  </script>
+</body>
+</html>

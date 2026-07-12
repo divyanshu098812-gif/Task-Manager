@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Nexus Task — The premium AI productivity platform. Organize your life with a beautiful, futuristic task manager.">
+  <title>Nexus Task — Premium AI Task Manager</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ===== ANIMATED BACKGROUND ===== -->
+  <div class="bg-canvas">
+    <div class="bg-gradient-mesh"></div>
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
+    <div class="bg-blob bg-blob-4"></div>
+  </div>
+  <canvas id="particle-canvas"></canvas>
+  <div class="cursor-glow"></div>
+
+  <!-- ===== LANDING PAGE ===== -->
+  <div class="landing-page">
+
+    <!-- Navbar -->
+    <nav class="landing-nav">
+      <a href="/" class="landing-logo">
+        <div class="landing-logo-icon">⚡</div>
+        <span class="landing-logo-text">Nexus Task</span>
+      </a>
+
+      <div class="landing-nav-links">
+        <button id="theme-toggle" class="icon-btn" title="Toggle theme" style="background:none;border:1px solid var(--glass-border);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <a href="/login" class="btn btn-ghost btn-sm">Log in</a>
+        <a href="/signup" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <!-- Floating Orbs -->
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-orb hero-orb-3"></div>
+      <div class="hero-orb hero-orb-4"></div>
+
+      <div style="position:relative; z-index:10; max-width:800px; margin:0 auto;">
+        <div class="hero-badge" style="animation-delay:0s;">
+          <span class="hero-badge-dot"></span>
+          Now in Public Beta — Free Forever
+        </div>
+
+        <h1 class="hero-title">
+          Organize Your<br>
+          <span class="hero-title-gradient">Life Beautifully</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          The premium AI-powered task manager that feels like the future.
+          Built for people who refuse to settle for ordinary productivity tools.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/signup" class="btn btn-primary btn-lg" id="hero-cta">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            Start for Free
+          </a>
+          <a href="/login" class="btn btn-ghost btn-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Sign In
+          </a>
+        </div>
+
+        <!-- Mini Dashboard Preview -->
+        <div style="margin-top:60px; position:relative; animation: float 6s ease-in-out infinite;">
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; max-width:600px; margin:0 auto;">
+            <div class="stat-card total" data-tilt data-tilt-strength="5" style="text-align:center;">
+              <div class="stat-value" style="font-size:28px;">24</div>
+              <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card pending" data-tilt data-tilt-strength="5" style="text-align:center;">
+              <div class="stat-value" style="font-size:28px;">8</div>
+              <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card completed" data-tilt data-tilt-strength="5" style="text-align:center;">
+              <div class="stat-value" style="font-size:28px;">14</div>
+              <div class="stat-label">Done</div>
+            </div>
+            <div class="stat-card overdue" data-tilt data-tilt-strength="5" style="text-align:center;">
+              <div class="stat-value" style="font-size:28px;">2</div>
+              <div class="stat-label">Overdue</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+      <div style="text-align:center; margin-bottom:48px;">
+        <div class="hero-badge" style="display:inline-flex; margin-bottom:16px;">
+          <span class="hero-badge-dot"></span>
+          Why Nexus Task?
+        </div>
+        <h2 style="font-size:38px; font-weight:800; color:var(--text-primary); letter-spacing:-0.03em; margin-bottom:12px;">
+          Everything you need,<br><span class="hero-title-gradient">nothing you don't.</span>
+        </h2>
+        <p style="color:var(--text-secondary); font-size:15px; max-width:480px; margin:0 auto; line-height:1.7;">
+          A task manager that respects your intelligence and delights your senses.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card" data-tilt style="--icon-bg:rgba(99,102,241,0.15); --icon-glow:rgba(99,102,241,0.3); --icon-color:#818cf8;" style="animation-delay:0.1s">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="feature-title">Lightning Fast</div>
+          <div class="feature-desc">Instant task management with zero friction. Create, update, and complete tasks in milliseconds.</div>
+        </div>
+
+        <div class="feature-card" data-tilt style="--icon-bg:rgba(16,185,129,0.15); --icon-glow:rgba(16,185,129,0.3); --icon-color:#34d399;" style="animation-delay:0.2s">
+          <div class="feature-icon" style="--icon-bg:rgba(16,185,129,0.15); --icon-glow:rgba(16,185,129,0.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="feature-title">Secure by Design</div>
+          <div class="feature-desc">Your tasks are protected with enterprise-grade encryption. Only you can see your data.</div>
+        </div>
+
+        <div class="feature-card" data-tilt style="animation-delay:0.3s">
+          <div class="feature-icon" style="--icon-bg:rgba(139,92,246,0.15); --icon-glow:rgba(139,92,246,0.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          </div>
+          <div class="feature-title">Always Available</div>
+          <div class="feature-desc">Access your tasks from any device, any time. Perfectly synced and always ready.</div>
+        </div>
+
+        <div class="feature-card" data-tilt style="animation-delay:0.1s">
+          <div class="feature-icon" style="--icon-bg:rgba(245,158,11,0.15); --icon-glow:rgba(245,158,11,0.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="feature-title">Smart Deadlines</div>
+          <div class="feature-desc">Never miss a deadline. Automatic overdue detection and visual priority indicators.</div>
+        </div>
+
+        <div class="feature-card" data-tilt style="animation-delay:0.2s">
+          <div class="feature-icon" style="--icon-bg:rgba(6,182,212,0.15); --icon-glow:rgba(6,182,212,0.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="feature-title">Live Analytics</div>
+          <div class="feature-desc">Real-time productivity stats. Watch your completion rate soar with beautiful visualizations.</div>
+        </div>
+
+        <div class="feature-card" data-tilt style="animation-delay:0.3s">
+          <div class="feature-icon" style="--icon-bg:rgba(236,72,153,0.15); --icon-glow:rgba(236,72,153,0.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div class="feature-title">Beautifully Crafted</div>
+          <div class="feature-desc">A UI that feels like a premium product. Dark mode, light mode, and everything in between.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section style="padding:var(--space-3xl) var(--space-xl); text-align:center;">
+      <div style="max-width:600px; margin:0 auto; background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:var(--radius-2xl); padding:var(--space-3xl) var(--space-xl); position:relative; overflow:hidden;">
+        <div style="position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(99,102,241,0.12), transparent 70%); pointer-events:none;"></div>
+        <div class="hero-badge" style="display:inline-flex; margin-bottom:20px;">
+          <span class="hero-badge-dot"></span>
+          Join Today
+        </div>
+        <h2 style="font-size:32px; font-weight:800; color:var(--text-primary); letter-spacing:-0.03em; margin-bottom:12px; position:relative;">
+          Ready to level up<br>your productivity?
+        </h2>
+        <p style="color:var(--text-secondary); margin-bottom:32px; position:relative;">
+          Join thousands of professionals who manage their tasks with Nexus.
+        </p>
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; position:relative;">
+          <a href="/signup" class="btn btn-primary btn-lg">
+            Create Free Account
+          </a>
+          <a href="/login" class="btn btn-ghost btn-lg">Sign In</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="border-top:1px solid var(--border-subtle); padding:24px 48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="landing-logo-icon" style="width:28px;height:28px;border-radius:8px;font-size:14px;">⚡</div>
+        <span style="font-weight:700; font-size:15px; color:var(--text-primary);">Nexus Task</span>
+      </div>
+      <p style="color:var(--text-muted); font-size:13px;">© 2026 Nexus Task. Crafted with ❤️ for productivity.</p>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
