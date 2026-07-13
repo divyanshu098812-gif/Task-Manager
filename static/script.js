@@ -285,11 +285,15 @@ function addRippleToButtons(btns) {
 }
 
 
-// ===== SIDEBAR MANAGER =====
+// ===== SIDEBAR MANAGER (Enhanced for Mobile) =====
 const Sidebar = {
   el: null,
   mainContent: null,
   isCollapsed: false,
+  isMobile: false,
+  overlay: null,
+  startY: 0,
+  currentY: 0,
 
   init() {
     this.el = document.querySelector('.sidebar');
@@ -297,28 +301,138 @@ const Sidebar = {
     const toggle = document.querySelector('.sidebar-toggle');
     if (!this.el) return;
 
-    // Restore state
-    const saved = localStorage.getItem('sidebar-collapsed') === 'true';
-    if (saved) this.collapse();
+    // Check if mobile
+    this.checkMobile();
+    window.addEventListener('resize', () => this.checkMobile());
 
+    // Restore state for desktop
+    if (!this.isMobile) {
+      const saved = localStorage.getItem('sidebar-collapsed') === 'true';
+      if (saved) this.collapse();
+    }
+
+    // Desktop toggle
     if (toggle) {
       toggle.addEventListener('click', () => this.toggle());
     }
 
-    // Mobile overlay
-    const mobileToggle = document.getElementById('mobile-sidebar-toggle');
-    if (mobileToggle) {
-      mobileToggle.addEventListener('click', () => {
-        this.el.classList.toggle('mobile-open');
-      });
+    // Mobile setup
+    this.setupMobile();
+  },
+
+  checkMobile() {
+    const wasMobile = this.isMobile;
+    this.isMobile = window.innerWidth <= 768;
+    
+    // Reset classes when switching between mobile/desktop
+    if (wasMobile !== this.isMobile) {
+      if (this.isMobile) {
+        this.el?.classList.remove('collapsed');
+        this.mainContent?.classList.remove('sidebar-collapsed');
+      } else {
+        this.closeMobile();
+      }
     }
   },
 
+  setupMobile() {
+    // Create overlay
+    if (!this.overlay) {
+      this.overlay = document.createElement('div');
+      this.overlay.className = 'sidebar-overlay';
+      document.body.appendChild(this.overlay);
+    }
+
+    // Mobile hamburger button
+    const mobileToggle = document.getElementById('mobile-sidebar-toggle');
+    if (mobileToggle) {
+      mobileToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openMobile();
+      });
+    }
+
+    // Click overlay to close
+    this.overlay.addEventListener('click', () => this.closeMobile());
+
+    // Click any nav item to close
+    const navItems = this.el?.querySelectorAll('.nav-item');
+    navItems?.forEach(item => {
+      item.addEventListener('click', () => {
+        if (this.isMobile) {
+          this.closeMobile();
+        }
+      });
+    });
+
+    // Close on scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+      if (!this.isMobile || !this.el?.classList.contains('mobile-open')) return;
+      
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        this.closeMobile();
+      }, 100);
+    }, { passive: true });
+
+    // Swipe to close (touch)
+    this.el?.addEventListener('touchstart', (e) => {
+      if (!this.isMobile) return;
+      this.startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    this.el?.addEventListener('touchmove', (e) => {
+      if (!this.isMobile || !this.el?.classList.contains('mobile-open')) return;
+      this.currentY = e.touches[0].clientY;
+    }, { passive: true });
+
+    this.el?.addEventListener('touchend', () => {
+      if (!this.isMobile) return;
+      const deltaY = Math.abs(this.currentY - this.startY);
+      if (deltaY > 50) {
+        // Significant vertical swipe detected during scrolling
+        // Don't close sidebar
+      }
+    }, { passive: true });
+
+    // Escape key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isMobile && this.el?.classList.contains('mobile-open')) {
+        this.closeMobile();
+      }
+    });
+  },
+
+  openMobile() {
+    if (!this.isMobile) return;
+    this.el?.classList.add('mobile-open');
+    this.overlay?.classList.add('active');
+    document.body.classList.add('sidebar-open');
+  },
+
+  closeMobile() {
+    this.el?.classList.remove('mobile-open');
+    this.overlay?.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+  },
+
   toggle() {
-    this.isCollapsed ? this.expand() : this.collapse();
+    if (this.isMobile) {
+      // On mobile, toggle open/close
+      if (this.el?.classList.contains('mobile-open')) {
+        this.closeMobile();
+      } else {
+        this.openMobile();
+      }
+    } else {
+      // On desktop, toggle collapse
+      this.isCollapsed ? this.expand() : this.collapse();
+    }
   },
 
   collapse() {
+    if (this.isMobile) return;
     this.isCollapsed = true;
     this.el?.classList.add('collapsed');
     this.mainContent?.classList.add('sidebar-collapsed');
@@ -327,6 +441,7 @@ const Sidebar = {
   },
 
   expand() {
+    if (this.isMobile) return;
     this.isCollapsed = false;
     this.el?.classList.remove('collapsed');
     this.mainContent?.classList.remove('sidebar-collapsed');
@@ -757,3 +872,44 @@ function initGreetingAnimation() {
 
   tick();
 }
+
+
+// ===== MOBILE UTILITIES =====
+(function() {
+  // Show mobile hamburger menu on mobile devices
+  function updateMobileUI() {
+    const isMobile = window.innerWidth <= 768;
+    const mobileToggle = document.getElementById('mobile-sidebar-toggle');
+    
+    if (mobileToggle) {
+      mobileToggle.style.display = isMobile ? 'flex' : 'none';
+    }
+  }
+  
+  // Run on load and resize
+  updateMobileUI();
+  window.addEventListener('resize', updateMobileUI);
+  
+  // Prevent double-tap zoom on buttons (iOS)
+  document.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    const lastTouch = document.lastTouchEnd || 0;
+    
+    if (now - lastTouch <= 300 && e.target.matches('button, a, .btn')) {
+      e.preventDefault();
+      e.target.click();
+    }
+    
+    document.lastTouchEnd = now;
+  }, false);
+  
+  // Fix viewport height on mobile browsers (address bar)
+  function setVH() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+  
+  setVH();
+  window.addEventListener('resize', setVH);
+  window.addEventListener('orientationchange', setVH);
+})();
