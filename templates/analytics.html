@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Analytics — Nexus Task productivity insights.">
+  <title>Analytics — Nexus Task</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='charts.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="bg-canvas">
+  <div class="bg-gradient-mesh"></div>
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+</div>
+<canvas id="particle-canvas"></canvas>
+<div class="cursor-glow"></div>
+
+<div class="app-layout">
+  {% include '_sidebar.html' %}
+
+  <main class="main-content" id="main-content">
+    <header class="navbar">
+      <div class="navbar-left">
+        <span class="navbar-page-title">Analytics</span>
+      </div>
+      <div class="navbar-right">
+        <button id="theme-toggle" class="icon-btn" title="Toggle theme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <a href="{{ url_for('tasks') }}" class="btn btn-ghost btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Dashboard
+        </a>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Page Header -->
+      <div class="welcome-hero" style="padding-bottom:var(--space-lg);">
+        <div class="welcome-greeting" id="greeting-text">Your Stats</div>
+        <h1 class="welcome-name">Productivity <span>Analytics</span></h1>
+        <p class="welcome-subtitle">Deep insights into your task completion patterns and productivity trends.</p>
+      </div>
+
+      <!-- ===== STAT CARDS ROW ===== -->
+      <div class="stats-grid" id="analytics-stats"></div>
+
+      <!-- ===== CHARTS ROW ===== -->
+      <div class="analytics-charts-row">
+
+        <!-- Status Distribution -->
+        <div class="chart-card" data-tilt data-tilt-strength="3">
+          <div class="chart-card-header">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Task Status
+            </div>
+            <span class="chart-card-subtitle">Distribution</span>
+          </div>
+          <div class="chart-wrap-sm">
+            <canvas id="chart-status"></canvas>
+          </div>
+          <div id="status-legend" class="chart-legend"></div>
+        </div>
+
+        <!-- Weekly Activity -->
+        <div class="chart-card" data-tilt data-tilt-strength="3">
+          <div class="chart-card-header">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Weekly Activity
+            </div>
+            <span class="chart-card-subtitle">Tasks created per day</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-weekly"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== MONTHLY TREND ===== -->
+      <div class="chart-card" data-tilt data-tilt-strength="2" style="margin-bottom:var(--space-lg);">
+        <div class="chart-card-header">
+          <div class="chart-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="2 20 22 20"/></svg>
+            Monthly Productivity
+          </div>
+          <span class="chart-card-subtitle">Task creation trend — last 6 months</span>
+        </div>
+        <div class="chart-wrap" style="height:180px;">
+          <canvas id="chart-monthly"></canvas>
+        </div>
+      </div>
+
+      <!-- ===== COMPLETION RATE ===== -->
+      <div class="analytics-charts-row" style="margin-bottom:var(--space-lg);">
+        <div class="chart-card" data-tilt data-tilt-strength="3">
+          <div class="chart-card-header">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Completion Rate
+            </div>
+            <span class="chart-card-subtitle">Overall productivity score</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:center; padding:20px 0 8px;">
+            <div class="completion-ring-wrap">
+              <canvas id="chart-completion" width="180" height="180"></canvas>
+              <div class="completion-ring-label" id="completion-pct">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Timeline -->
+        <div class="chart-card" style="flex:1.5;">
+          <div class="chart-card-header">
+            <div class="chart-card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Recent Activity
+            </div>
+            <span class="chart-card-subtitle">Last 8 tasks</span>
+          </div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+      </div>
+
+      <!-- Empty state if no tasks -->
+      <div id="empty-analytics" style="display:none; text-align:center; padding:60px 20px;">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="2 20 22 20"/></svg>
+        </div>
+        <div class="empty-title">No data yet</div>
+        <div class="empty-subtitle">Create your first task to start seeing analytics.</div>
+        <a href="{{ url_for('add_task') }}" class="btn btn-primary" style="margin-top:20px;">Create a Task</a>
+      </div>
+
+    </div><!-- /page-content -->
+  </main>
+</div>
+
+<!-- Pass tasks data to JavaScript -->
+<script>
+const TASKS_DATA = {{ tasks | tojson }};
+</script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+<script src="{{ url_for('static', filename='notifications.js') }}"></script>
+<script>
+// ============================================================
+// Analytics Page — Chart.js Implementation
+// ============================================================
+(function() {
+  const tasks  = TASKS_DATA;
+  const today  = new Date(); today.setHours(0,0,0,0);
+
+  if (!tasks.length) {
+    document.getElementById('empty-analytics').style.display = 'block';
+    document.querySelectorAll('.chart-card, .stats-grid').forEach(el => el.style.display = 'none');
+    return;
+  }
+
+  // ---- Derived stats ----
+  const total     = tasks.length;
+  const completed = tasks.filter(t => t.status === 'Completed').length;
+  const pending   = tasks.filter(t => t.status !== 'Completed').length;
+  const overdue   = tasks.filter(t => {
+    if (t.status === 'Completed' || !t.deadline) return false;
+    return new Date(t.deadline) < today;
+  }).length;
+  const pct = total > 0 ? Math.round(completed / total * 100) : 0;
+
+  // ---- Stat Cards ----
+  const statsEl = document.getElementById('analytics-stats');
+  const statDefs = [
+    { label:'Total Tasks',   value:total,     cls:'total',     icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',      color:'#818cf8' },
+    { label:'Completed',     value:completed, cls:'completed', icon:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',                         color:'#34d399' },
+    { label:'Pending',       value:pending,   cls:'pending',   icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',                                            color:'#fbbf24' },
+    { label:'Overdue',       value:overdue,   cls:'overdue',   icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',  color:'#f87171' },
+  ];
+  statsEl.innerHTML = statDefs.map(s => `
+    <div class="stat-card ${s.cls} anim-in" data-tilt>
+      <div class="stat-card-header">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${s.color}" stroke-width="2">${s.icon}</svg>
+        </div>
+      </div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:${total>0?Math.round(s.value/total*100):0}%"></div></div>
+    </div>
+  `).join('');
+
+  // ---- Chart.js global defaults ----
+  const FONT = "'Inter', sans-serif";
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.color = 'rgba(148,163,184,0.8)';
+
+  // ---- Status Doughnut ----
+  new Chart(document.getElementById('chart-status'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed','Pending','Overdue'],
+      datasets:[{
+        data:[completed, pending - overdue, overdue],
+        backgroundColor:['rgba(52,211,153,0.85)','rgba(251,191,36,0.85)','rgba(248,113,113,0.85)'],
+        borderColor:['#34d399','#fbbf24','#f87171'],
+        borderWidth:2,
+        hoverOffset:8,
+      }]
+    },
+    options:{
+      cutout:'72%',
+      plugins:{ legend:{display:false}, tooltip:{
+        backgroundColor:'rgba(15,15,35,0.95)',
+        titleFont:{size:13,weight:'700'},
+        bodyFont:{size:12},
+        padding:12,
+        cornerRadius:10,
+      }},
+      animation:{ animateRotate:true, duration:1200, easing:'easeInOutQuart' },
+    }
+  });
+  // Custom legend
+  document.getElementById('status-legend').innerHTML =
+    [['Completed','#34d399',completed],['Pending','#fbbf24',pending-overdue],['Overdue','#f87171',overdue]]
+    .map(([l,c,v])=>`<div class="legend-item"><span class="legend-dot" style="background:${c}"></span><span>${l}</span><strong>${v}</strong></div>`).join('');
+
+  // ---- Weekly Activity Bar ----
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const weeklyCounts = Array(7).fill(0);
+  tasks.forEach(t => {
+    const d = new Date(t.created_at || t.deadline || Date.now());
+    if (!isNaN(d)) weeklyCounts[d.getDay()]++;
+  });
+  const weekData  = [...weeklyCounts.slice(1), weeklyCounts[0]]; // Mon-Sun
+  const weekLabels= [...days.slice(1), days[0]];
+  new Chart(document.getElementById('chart-weekly'), {
+    type:'bar',
+    data:{
+      labels:weekLabels,
+      datasets:[{
+        label:'Tasks',
+        data:weekData,
+        backgroundColor:'rgba(99,102,241,0.5)',
+        borderColor:'#6366f1',
+        borderWidth:2,
+        borderRadius:8,
+        borderSkipped:false,
+        hoverBackgroundColor:'rgba(99,102,241,0.8)',
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{
+        backgroundColor:'rgba(15,15,35,0.95)', cornerRadius:10, padding:12,
+      }},
+      scales:{
+        x:{ grid:{color:'rgba(148,163,184,0.06)'}, border:{display:false} },
+        y:{ grid:{color:'rgba(148,163,184,0.06)'}, border:{display:false}, ticks:{stepSize:1} },
+      },
+      animation:{duration:1000, easing:'easeInOutQuart'},
+    }
+  });
+
+  // ---- Monthly Trend Line ----
+  const now = new Date();
+  const monthLabels=[], monthlyCounts=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(), now.getMonth()-i, 1);
+    monthLabels.push(d.toLocaleString('default',{month:'short',year:'2-digit'}));
+    monthlyCounts.push(tasks.filter(t=>{
+      const td=new Date(t.created_at||t.deadline||0);
+      return td.getMonth()===d.getMonth()&&td.getFullYear()===d.getFullYear();
+    }).length);
+  }
+  new Chart(document.getElementById('chart-monthly'),{
+    type:'line',
+    data:{
+      labels:monthLabels,
+      datasets:[{
+        label:'Tasks',
+        data:monthlyCounts,
+        borderColor:'#818cf8',
+        backgroundColor:'rgba(99,102,241,0.08)',
+        fill:true,
+        tension:0.4,
+        pointBackgroundColor:'#818cf8',
+        pointBorderColor:'rgba(15,15,35,1)',
+        pointBorderWidth:2,
+        pointRadius:5,
+        pointHoverRadius:8,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{backgroundColor:'rgba(15,15,35,0.95)',cornerRadius:10,padding:12}},
+      scales:{
+        x:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false}},
+        y:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false},ticks:{stepSize:1}},
+      },
+      animation:{duration:1200,easing:'easeInOutQuart'},
+    }
+  });
+
+  // ---- Completion Ring ----
+  new Chart(document.getElementById('chart-completion'),{
+    type:'doughnut',
+    data:{
+      datasets:[{
+        data:[pct, 100-pct],
+        backgroundColor:['rgba(52,211,153,0.9)','rgba(30,41,59,0.4)'],
+        borderColor:['#34d399','transparent'],
+        borderWidth:[2,0],
+        hoverOffset:0,
+      }]
+    },
+    options:{
+      cutout:'78%',
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      animation:{animateRotate:true,duration:1500,easing:'easeInOutQuart'},
+    }
+  });
+  document.getElementById('completion-pct').textContent = pct + '%';
+
+  // ---- Timeline ----
+  const recent = tasks.slice(0,8);
+  document.getElementById('timeline').innerHTML = recent.length
+    ? recent.map(t=>`
+      <div class="timeline-item">
+        <div class="timeline-dot ${t.status==='Completed'?'dot-done':'dot-pending'}"></div>
+        <div class="timeline-body">
+          <div class="timeline-title">${t.title}</div>
+          <div class="timeline-meta">
+            <span class="task-status-badge ${t.status==='Completed'?'status-completed':'status-pending'}" style="font-size:10px; padding:2px 8px;">
+              <span class="status-dot"></span>${t.status}
+            </span>
+            ${t.deadline?`<span style="color:var(--text-muted);font-size:11px;">${t.deadline}</span>`:''}
+          </div>
+        </div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:32px;color:var(--text-muted);">No activity yet</div>';
+
+  // Init tilt on dynamic cards
+  if(window.VanillaTilt) VanillaTilt.init(document.querySelectorAll('[data-tilt]'),{max:8,speed:400,glare:true,'max-glare':0.05});
+
+  // Time greeting
+  const h=new Date().getHours();
+  const gr=document.getElementById('greeting-text');
+  if(gr) gr.textContent = h<12?'Good morning ☀️':h<17?'Good afternoon 🌤️':'Good evening 🌙';
+})();
+
+document.getElementById('sidebar-toggle-btn')?.addEventListener('click', ()=>Sidebar&&Sidebar.toggle());
+</script>
+</body>
+</html>

@@ -698,4 +698,62 @@ document.addEventListener('DOMContentLoaded', () => {
   if (themeBtn) {
     themeBtn.addEventListener('click', () => ThemeManager.toggle());
   }
+
+  // Sidebar toggle
+  document.getElementById('sidebar-toggle-btn')?.addEventListener('click', () => Sidebar && Sidebar.toggle());
+
+  // Animated greeting
+  initGreetingAnimation();
 });
+
+// ==========================================================================
+// Greeting Typewriter Animation
+// ==========================================================================
+function initGreetingAnimation() {
+  const el = document.getElementById('greeting-display');
+  if (!el) return;
+
+  const username = (el.dataset.username || 'there').trim();
+  const messages = [
+    `Welcome back, ${username}! 👋`,
+    `Ready to conquer today? ✨`,
+    `Let's get things done! ⚡`,
+    `Stay productive! 💜`,
+    `Focused & unstoppable 🚀`,
+    `Great things take effort 🌟`,
+  ];
+
+  let msgIdx   = 0;
+  let charIdx  = 0;
+  let deleting = false;
+  let paused   = false;
+  let timer    = null;
+
+  function tick() {
+    if (paused) return;
+    const current = messages[msgIdx];
+
+    if (!deleting) {
+      charIdx++;
+      el.textContent = current.substring(0, charIdx);
+      if (charIdx >= current.length) {
+        paused = true;
+        setTimeout(() => { paused = false; deleting = true; tick(); }, 2800);
+        return;
+      }
+      timer = setTimeout(tick, 75);
+    } else {
+      charIdx--;
+      el.textContent = current.substring(0, charIdx);
+      if (charIdx <= 0) {
+        deleting = false;
+        msgIdx   = (msgIdx + 1) % messages.length;
+        timer    = setTimeout(tick, 350);
+        return;
+      }
+      timer = setTimeout(tick, 38);
+    }
+  }
+
+  tick();
+}
