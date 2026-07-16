@@ -226,12 +226,5 @@ const TASKS_DATA = {{ tasks | tojson }};
 })();
 </script>
 <script src="{{ url_for('static', filename='chat.js') }}"></script>
-<script>
-  // Initialize AI Chat
-  if (typeof NexusChat !== 'undefined') {
-    const chat = new NexusChat();
-    chat.init();
-  }
-</script>
 </body>
 </html>

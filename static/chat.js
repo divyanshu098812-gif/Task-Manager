@@ -1,14 +1,8 @@
-// ==========================================================================
-// chat.js — Nexus AI Chat Interface
-// ==========================================================================
-
 class NexusChat {
   constructor() {
     this.isOpen = false;
     this.conversation = [];
     this.isTyping = false;
-    
-    this.init();
   }
   
   init() {
@@ -18,7 +12,6 @@ class NexusChat {
   }
   
   createChatUI() {
-    // Create FAB button
     const fab = document.createElement('button');
     fab.className = 'ai-fab';
     fab.id = 'ai-fab';
@@ -26,7 +19,6 @@ class NexusChat {
     fab.title = 'Open Nexus AI Assistant';
     document.body.appendChild(fab);
     
-    // Create chat window
     const chatWindow = document.createElement('div');
     chatWindow.className = 'ai-chat-window';
     chatWindow.id = 'ai-chat-window';
@@ -78,17 +70,11 @@ class NexusChat {
   }
   
   attachEventListeners() {
-    // FAB button
     document.getElementById('ai-fab').addEventListener('click', () => this.toggle());
-    
-    // Close/minimize buttons
     document.getElementById('ai-close').addEventListener('click', () => this.close());
     document.getElementById('ai-minimize').addEventListener('click', () => this.close());
-    
-    // Send button
     document.getElementById('ai-send-btn').addEventListener('click', () => this.sendMessage());
     
-    // Textarea
     const textarea = document.getElementById('ai-textarea');
     textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -97,13 +83,11 @@ class NexusChat {
       }
     });
     
-    // Auto-resize textarea
     textarea.addEventListener('input', () => {
       textarea.style.height = 'auto';
       textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
     });
     
-    // Quick actions
     document.querySelectorAll('.ai-quick-action').forEach(btn => {
       btn.addEventListener('click', () => this.handleQuickAction(btn.dataset.action));
     });
@@ -165,7 +149,6 @@ class NexusChat {
     messagesDiv.appendChild(messageEl);
     this.scrollToBottom();
     
-    // Add to conversation history
     this.conversation.push({
       role: isUser ? 'user' : 'assistant',
       content: content
@@ -173,17 +156,11 @@ class NexusChat {
   }
   
   formatMessage(content) {
-    // Basic markdown-like formatting
     let formatted = content
-      // Bold
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Italic
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // Code blocks
       .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-      // Inline code
       .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Line breaks
       .replace(/\n/g, '<br>');
     
     return formatted;
@@ -231,12 +208,10 @@ class NexusChat {
     
     if (!message || this.isTyping) return;
     
-    // Add user message
     this.addMessage(message, true);
     textarea.value = '';
     textarea.style.height = 'auto';
     
-    // Show typing indicator
     this.showTyping();
     
     try {
@@ -247,7 +222,7 @@ class NexusChat {
         },
         body: JSON.stringify({
           message: message,
-          conversation: this.conversation.slice(-10) // Last 10 messages
+          conversation: this.conversation.slice(-10)
         })
       });
       
@@ -262,7 +237,7 @@ class NexusChat {
       }
     } catch (error) {
       this.hideTyping();
-      this.addMessage('⚠️ Failed to connect to AI service. Please try again.', false);
+      this.addMessage('⚠️ Failed to connect to AI service. Please check your internet connection and try again.', false);
       console.error('Chat error:', error);
     }
   }
@@ -283,7 +258,6 @@ class NexusChat {
       this.hideTyping();
       
       if (data.success) {
-        // Add quick action as user message
         const actionNames = {
           'plan-day': 'Plan my day',
           'analyze': 'Analyze my productivity',
@@ -299,17 +273,18 @@ class NexusChat {
       }
     } catch (error) {
       this.hideTyping();
-      this.addMessage('⚠️ Failed to connect to AI service. Please try again.', false);
+      this.addMessage('⚠️ Failed to connect to AI service. Please check your internet connection and try again.', false);
       console.error('Quick action error:', error);
     }
   }
 }
 
-// Initialize chat when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  window.nexusChat = new NexusChat();
+  if (window.nexusChat) return;
   
-  // Store username for avatar
+  window.nexusChat = new NexusChat();
+  window.nexusChat.init();
+  
   const usernameEl = document.querySelector('.topnav-username');
   if (usernameEl) {
     window.currentUsername = usernameEl.textContent.trim();

@@ -128,10 +128,21 @@
   <script src="{{ url_for('static', filename='script.js') }}"></script>
   <script src="{{ url_for('static', filename='chat.js') }}"></script>
   <script>
-    // Initialize AI Chat
-    if (typeof NexusChat !== 'undefined') {
-      const chat = new NexusChat();
-      chat.init();
+    const form = document.getElementById('add-task-form');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        const title = document.getElementById('title').value.trim();
+        if (!title) {
+          e.preventDefault();
+          if (window.Toast) Toast.show('Task title is required', 'warning', 'Validation Error');
+          return;
+        }
+      });
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === '1') {
+      if (window.Toast) Toast.show('Task added successfully', 'success', '✅ Task Added');
     }
   </script>
 </body>

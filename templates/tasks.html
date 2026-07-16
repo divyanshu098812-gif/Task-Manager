@@ -234,9 +234,14 @@
   <script src="{{ url_for('static', filename='script.js') }}"></script>
   <script src="{{ url_for('static', filename='notifications.js') }}"></script>
   <script>
-    // ===== Dashboard-specific initializations =====
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('added') === '1') {
+      if (window.Toast) Toast.show('Task added successfully', 'success', '✅ Task Added');
+    }
+    if (urlParams.get('updated') === '1') {
+      if (window.Toast) Toast.show('Task updated successfully', 'success', '✏️ Task Updated');
+    }
 
-    // Time-based greeting
     (function() {
       const hour = new Date().getHours();
       const greetings = {
@@ -290,12 +295,5 @@
     })();
   </script>
   <script src="{{ url_for('static', filename='chat.js') }}"></script>
-  <script>
-    // Initialize AI Chat
-    if (typeof NexusChat !== 'undefined') {
-      const chat = new NexusChat();
-      chat.init();
-    }
-  </script>
 </body>
 </html>

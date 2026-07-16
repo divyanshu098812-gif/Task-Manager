@@ -1,8 +1,3 @@
-// ==========================================================================
-// NEXUS TASK — Notification System
-// Complete notification dropdown with real-time updates
-// ==========================================================================
-
 class NotificationManager {
   constructor() {
     this.btn = null;
@@ -13,44 +8,24 @@ class NotificationManager {
   }
 
   async init() {
-    // Create notification button and dropdown
     this.createUI();
-    
-    // Load initial notifications
     await this.loadNotifications();
-    
-    // Poll for new notifications every 30 seconds
     this.startPolling();
-    
-    // Handle clicks
     this.setupEventListeners();
   }
 
   createUI() {
-    // Find the notification button in navbar
-    const navbarRight = document.querySelector('.navbar-right');
-    if (!navbarRight) return;
+    this.btn = document.getElementById('notif-btn');
+    if (!this.btn) return;
 
-    // Find existing notification button or create it
-    this.btn = document.querySelector('.icon-btn[title="Notifications"]');
-    if (!this.btn) {
-      this.btn = document.createElement('button');
-      this.btn.className = 'icon-btn';
-      this.btn.title = 'Notifications';
-      this.btn.id = 'notif-btn';
-      this.btn.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <span class="notification-badge" id="notif-badge" style="display:none;"></span>
-      `;
-      navbarRight.insertBefore(this.btn, navbarRight.children[navbarRight.children.length - 2]);
+    this.badge = this.btn.querySelector('.topnav-badge');
+    if (!this.badge) {
+      this.badge = document.createElement('span');
+      this.badge.className = 'topnav-badge';
+      this.badge.style.display = 'none';
+      this.btn.appendChild(this.badge);
     }
 
-    this.badge = this.btn.querySelector('.notification-badge') || this.btn.querySelector('#notif-badge');
-
-    // Create dropdown
     const container = this.btn.parentElement;
     container.style.position = 'relative';
     
@@ -86,23 +61,18 @@ class NotificationManager {
   }
 
   setupEventListeners() {
-    // Toggle dropdown
     this.btn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleDropdown();
     });
 
-    // Close on outside click
     document.addEventListener('click', (e) => {
       if (!this.dropdown.contains(e.target) && e.target !== this.btn) {
         this.closeDropdown();
       }
     });
 
-    // Mark all read
     document.getElementById('mark-all-read')?.addEventListener('click', () => this.markAllRead());
-    
-    // Clear all
     document.getElementById('clear-all')?.addEventListener('click', () => this.clearAll());
   }
 
@@ -139,7 +109,6 @@ class NotificationManager {
 
     list.innerHTML = notifications.map(n => this.renderNotification(n)).join('');
     
-    // Add click handlers to mark as read
     list.querySelectorAll('.notif-item').forEach(item => {
       item.addEventListener('click', () => {
         const id = parseInt(item.dataset.id);
@@ -180,7 +149,7 @@ class NotificationManager {
   formatTime(timestamp) {
     const now = new Date();
     const date = new Date(timestamp);
-    const diff = Math.floor((now - date) / 1000); // seconds
+    const diff = Math.floor((now - date) / 1000);
 
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
@@ -205,7 +174,7 @@ class NotificationManager {
     
     if (this.isOpen) {
       this.dropdown.classList.add('open');
-      this.loadNotifications(); // Refresh on open
+      this.loadNotifications();
     } else {
       this.dropdown.classList.remove('open');
     }
@@ -229,9 +198,9 @@ class NotificationManager {
     try {
       await fetch('/api/notifications/read-all', { method: 'POST' });
       await this.loadNotifications();
-      Toast.show('All notifications marked as read', 'success');
+      if (window.Toast) Toast.show('All notifications marked as read', 'success');
     } catch (err) {
-      Toast.show('Failed to mark all as read', 'warning');
+      if (window.Toast) Toast.show('Failed to mark all as read', 'warning');
     }
   }
 
@@ -239,14 +208,13 @@ class NotificationManager {
     try {
       await fetch('/api/notifications/clear', { method: 'DELETE' });
       await this.loadNotifications();
-      Toast.show('All notifications cleared', 'success');
+      if (window.Toast) Toast.show('All notifications cleared', 'success');
     } catch (err) {
-      Toast.show('Failed to clear notifications', 'warning');
+      if (window.Toast) Toast.show('Failed to clear notifications', 'warning');
     }
   }
 
   startPolling() {
-    // Poll every 30 seconds
     this.pollInterval = setInterval(() => {
       this.loadNotifications();
     }, 30000);
@@ -259,16 +227,13 @@ class NotificationManager {
   }
 }
 
-// Auto-initialize on task pages
 document.addEventListener('DOMContentLoaded', () => {
-  // Only initialize on authenticated pages (those with navbar)
-  if (document.querySelector('.navbar')) {
+  if (document.getElementById('notif-btn')) {
     window.NotifManager = new NotificationManager();
     window.NotifManager.init();
   }
 });
 
-// Keyframe for spinner
 const style = document.createElement('style');
 style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
 document.head.appendChild(style);

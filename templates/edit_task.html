@@ -125,10 +125,9 @@
   <script src="{{ url_for('static', filename='script.js') }}"></script>
   <script src="{{ url_for('static', filename='chat.js') }}"></script>
   <script>
-    // Initialize AI Chat
-    if (typeof NexusChat !== 'undefined') {
-      const chat = new NexusChat();
-      chat.init();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('updated') === '1') {
+      if (window.Toast) Toast.show('Task updated successfully', 'success', '✏️ Task Updated');
     }
   </script>
 </body>

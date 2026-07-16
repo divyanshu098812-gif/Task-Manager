@@ -212,7 +212,7 @@ def add_task():
             dl_str = f' — due {deadline}' if deadline else ''
             create_notification(current_user.id, 'task_created', f'✔ Task Created: {title}', f'Your new task has been added{dl_str}.')
 
-            return redirect(url_for('tasks'))
+            return redirect(url_for('tasks', added=1))
         except DBError as e:
             return _db_error_response(e, 'adding task')
 
@@ -300,7 +300,7 @@ def edit_task(id):
 
             create_notification(current_user.id, 'task_updated', f'✏ Task Updated: {title}', 'Task details have been updated.')
 
-            return redirect(url_for('tasks'))
+            return redirect(url_for('tasks', updated=1))
         except DBError as e:
             return _db_error_response(e, 'updating task')
 
