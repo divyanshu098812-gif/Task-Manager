@@ -108,11 +108,6 @@ The chatbot is powered by **Groq AI** and can:
 - Provide motivation
 - Answer productivity-related questions
 
----
-
-## 📸 Screenshots
-
-Add screenshots of your dashboard, chatbot, analytics, and calendar here.
 
 ---
 
