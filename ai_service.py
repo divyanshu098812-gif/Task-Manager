@@ -86,7 +86,7 @@ Remember: You can see user's tasks but cannot modify database directly. Always a
     
     def chat(self, user_message: str, conversation_history: List[Dict] = None) -> str:
         if not GROQ_API_KEY:
-            return "⚠️ AI service is not configured. Please add GROQ_API_KEY to environment variables."
+            return "⚠️ **Groq API Key Missing**\n\nThe AI chatbot requires a Groq API key to function.\n\n**For Local Development:**\n1. Get your API key from [console.groq.com/keys](https://console.groq.com/keys)\n2. Add it to your `.env` file:\n   ```\n   GROQ_API_KEY=your_key_here\n   ```\n3. Restart the Flask server\n\n**For Render Deployment:**\n1. Go to Render Dashboard → Your Service → Environment\n2. Add: `GROQ_API_KEY` with your key as the value\n3. Render will auto-deploy with the new variable"
         
         messages = [{"role": "system", "content": self._create_system_prompt()}]
         
@@ -116,13 +116,29 @@ Remember: You can see user's tasks but cannot modify database directly. Always a
             if response.status_code == 200:
                 result = response.json()
                 return result['choices'][0]['message']['content']
+            elif response.status_code == 401:
+                return "⚠️ **Invalid Groq API Key**\n\nThe provided API key is invalid or expired.\n\n**Solution:**\n1. Verify your API key at [console.groq.com/keys](https://console.groq.com/keys)\n2. Update the `GROQ_API_KEY` in your `.env` file (local) or Render Environment Variables (production)\n3. Make sure there are no extra spaces or quotes around the key"
+            elif response.status_code == 429:
+                return "⚠️ **Rate Limit Exceeded**\n\nYou've exceeded the Groq API rate limit.\n\n**Solution:**\n- Wait a few minutes and try again\n- Check your usage at [console.groq.com](https://console.groq.com)\n- Consider upgrading your Groq plan for higher limits"
+            elif response.status_code == 500:
+                return "⚠️ **Groq API Server Error**\n\nThe Groq API is experiencing issues.\n\n**Solution:**\n- Wait a few minutes and try again\n- Check Groq's status page\n- The issue is on Groq's side, not your application"
             else:
-                return f"⚠️ AI service error: {response.status_code}"
+                error_msg = f"⚠️ **AI Service Error (HTTP {response.status_code})**\n\n"
+                try:
+                    error_data = response.json()
+                    error_msg += f"Details: {error_data.get('error', {}).get('message', 'Unknown error')}"
+                except:
+                    error_msg += f"Raw response: {response.text[:200]}"
+                return error_msg
                 
         except requests.exceptions.Timeout:
-            return "⚠️ AI service timeout. Please try again."
+            return "⚠️ **Request Timeout**\n\nThe Groq API took too long to respond.\n\n**Solution:**\n- Check your internet connection\n- Try again in a few moments\n- The AI service might be experiencing high load"
+        except requests.exceptions.ConnectionError:
+            return "⚠️ **Connection Error**\n\nCannot connect to the Groq API.\n\n**Solution:**\n- Check your internet connection\n- Verify firewall/proxy settings\n- Ensure api.groq.com is accessible from your network"
+        except requests.exceptions.RequestException as e:
+            return f"⚠️ **Network Error**\n\nFailed to reach the Groq API.\n\nDetails: {str(e)[:200]}"
         except Exception as e:
-            return f"⚠️ Error communicating with AI: {str(e)}"
+            return f"⚠️ **Unexpected Error**\n\nAn unexpected error occurred.\n\nDetails: {str(e)[:200]}\n\nIf this persists, please check your configuration and server logs."
     
     def plan_my_day(self) -> str:
         tasks = self._get_user_tasks()
