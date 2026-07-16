@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='charts.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='chat.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -21,30 +22,12 @@
 <canvas id="particle-canvas"></canvas>
 <div class="cursor-glow"></div>
 
-<div class="app-layout">
-  {% include '_sidebar.html' %}
+<div class="app-layout-full">
+  {% set active_page = 'analytics' %}
+  {% include '_topnav.html' %}
 
-  <main class="main-content" id="main-content">
-    <header class="navbar">
-      <div class="navbar-left">
-        <!-- Mobile hamburger — shown via CSS below 992px -->
-        <button id="mobile-sidebar-toggle" class="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-        <span class="navbar-page-title">Analytics</span>
-      </div>
-      <div class="navbar-right">
-        <button id="theme-toggle" class="icon-btn" title="Toggle theme">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
-        <a href="{{ url_for('tasks') }}" class="btn btn-ghost btn-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-          Dashboard
-        </a>
-      </div>
-    </header>
-
-    <div class="page-content">
+  <main class="main-content main-content-full" id="main-content">
+    <div class="page-content page-content-full">
 
       <!-- Page Header -->
       <div class="welcome-hero" style="padding-bottom:var(--space-lg);">
@@ -145,7 +128,7 @@
         <a href="{{ url_for('add_task') }}" class="btn btn-primary" style="margin-top:20px;">Create a Task</a>
       </div>
 
-    </div><!-- /page-content -->
+    </div><!-- /page-content-full -->
   </main>
 </div>
 
@@ -200,166 +183,55 @@ const TASKS_DATA = {{ tasks | tojson }};
     </div>
   `).join('');
 
-  // ---- Chart.js global defaults ----
   const FONT = "'Inter', sans-serif";
   Chart.defaults.font.family = FONT;
   Chart.defaults.color = 'rgba(148,163,184,0.8)';
 
-  // ---- Status Doughnut ----
   new Chart(document.getElementById('chart-status'), {
     type: 'doughnut',
-    data: {
-      labels: ['Completed','Pending','Overdue'],
-      datasets:[{
-        data:[completed, pending - overdue, overdue],
-        backgroundColor:['rgba(52,211,153,0.85)','rgba(251,191,36,0.85)','rgba(248,113,113,0.85)'],
-        borderColor:['#34d399','#fbbf24','#f87171'],
-        borderWidth:2,
-        hoverOffset:8,
-      }]
-    },
-    options:{
-      cutout:'72%',
-      plugins:{ legend:{display:false}, tooltip:{
-        backgroundColor:'rgba(15,15,35,0.95)',
-        titleFont:{size:13,weight:'700'},
-        bodyFont:{size:12},
-        padding:12,
-        cornerRadius:10,
-      }},
-      animation:{ animateRotate:true, duration:1200, easing:'easeInOutQuart' },
-    }
+    data: { labels: ['Completed','Pending','Overdue'], datasets:[{ data:[completed, pending - overdue, overdue], backgroundColor:['rgba(52,211,153,0.85)','rgba(251,191,36,0.85)','rgba(248,113,113,0.85)'], borderColor:['#34d399','#fbbf24','#f87171'], borderWidth:2, hoverOffset:8 }] },
+    options:{ cutout:'72%', plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'rgba(15,15,35,0.95)', titleFont:{size:13,weight:'700'}, bodyFont:{size:12}, padding:12, cornerRadius:10 }}, animation:{ animateRotate:true, duration:1200, easing:'easeInOutQuart' } }
   });
-  // Custom legend
   document.getElementById('status-legend').innerHTML =
     [['Completed','#34d399',completed],['Pending','#fbbf24',pending-overdue],['Overdue','#f87171',overdue]]
     .map(([l,c,v])=>`<div class="legend-item"><span class="legend-dot" style="background:${c}"></span><span>${l}</span><strong>${v}</strong></div>`).join('');
 
-  // ---- Weekly Activity Bar ----
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const weeklyCounts = Array(7).fill(0);
-  tasks.forEach(t => {
-    const d = new Date(t.created_at || t.deadline || Date.now());
-    if (!isNaN(d)) weeklyCounts[d.getDay()]++;
-  });
-  const weekData  = [...weeklyCounts.slice(1), weeklyCounts[0]]; // Mon-Sun
+  tasks.forEach(t => { const d = new Date(t.created_at || t.deadline || Date.now()); if (!isNaN(d)) weeklyCounts[d.getDay()]++; });
+  const weekData  = [...weeklyCounts.slice(1), weeklyCounts[0]];
   const weekLabels= [...days.slice(1), days[0]];
   new Chart(document.getElementById('chart-weekly'), {
-    type:'bar',
-    data:{
-      labels:weekLabels,
-      datasets:[{
-        label:'Tasks',
-        data:weekData,
-        backgroundColor:'rgba(99,102,241,0.5)',
-        borderColor:'#6366f1',
-        borderWidth:2,
-        borderRadius:8,
-        borderSkipped:false,
-        hoverBackgroundColor:'rgba(99,102,241,0.8)',
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{
-        backgroundColor:'rgba(15,15,35,0.95)', cornerRadius:10, padding:12,
-      }},
-      scales:{
-        x:{ grid:{color:'rgba(148,163,184,0.06)'}, border:{display:false} },
-        y:{ grid:{color:'rgba(148,163,184,0.06)'}, border:{display:false}, ticks:{stepSize:1} },
-      },
-      animation:{duration:1000, easing:'easeInOutQuart'},
-    }
+    type:'bar', data:{ labels:weekLabels, datasets:[{ label:'Tasks', data:weekData, backgroundColor:'rgba(99,102,241,0.5)', borderColor:'#6366f1', borderWidth:2, borderRadius:8, borderSkipped:false, hoverBackgroundColor:'rgba(99,102,241,0.8)' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{backgroundColor:'rgba(15,15,35,0.95)', cornerRadius:10, padding:12}}, scales:{ x:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false}}, y:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false},ticks:{stepSize:1}} }, animation:{duration:1000,easing:'easeInOutQuart'} }
   });
 
-  // ---- Monthly Trend Line ----
-  const now = new Date();
-  const monthLabels=[], monthlyCounts=[];
-  for(let i=5;i>=0;i--){
-    const d=new Date(now.getFullYear(), now.getMonth()-i, 1);
-    monthLabels.push(d.toLocaleString('default',{month:'short',year:'2-digit'}));
-    monthlyCounts.push(tasks.filter(t=>{
-      const td=new Date(t.created_at||t.deadline||0);
-      return td.getMonth()===d.getMonth()&&td.getFullYear()===d.getFullYear();
-    }).length);
-  }
-  new Chart(document.getElementById('chart-monthly'),{
-    type:'line',
-    data:{
-      labels:monthLabels,
-      datasets:[{
-        label:'Tasks',
-        data:monthlyCounts,
-        borderColor:'#818cf8',
-        backgroundColor:'rgba(99,102,241,0.08)',
-        fill:true,
-        tension:0.4,
-        pointBackgroundColor:'#818cf8',
-        pointBorderColor:'rgba(15,15,35,1)',
-        pointBorderWidth:2,
-        pointRadius:5,
-        pointHoverRadius:8,
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{backgroundColor:'rgba(15,15,35,0.95)',cornerRadius:10,padding:12}},
-      scales:{
-        x:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false}},
-        y:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false},ticks:{stepSize:1}},
-      },
-      animation:{duration:1200,easing:'easeInOutQuart'},
-    }
-  });
+  const now2 = new Date(); const monthLabels=[],monthlyCounts=[];
+  for(let i=5;i>=0;i--){ const d=new Date(now2.getFullYear(),now2.getMonth()-i,1); monthLabels.push(d.toLocaleString('default',{month:'short',year:'2-digit'})); monthlyCounts.push(tasks.filter(t=>{ const td=new Date(t.created_at||t.deadline||0); return td.getMonth()===d.getMonth()&&td.getFullYear()===d.getFullYear(); }).length); }
+  new Chart(document.getElementById('chart-monthly'),{ type:'line', data:{ labels:monthLabels, datasets:[{ label:'Tasks', data:monthlyCounts, borderColor:'#818cf8', backgroundColor:'rgba(99,102,241,0.08)', fill:true, tension:0.4, pointBackgroundColor:'#818cf8', pointBorderColor:'rgba(15,15,35,1)', pointBorderWidth:2, pointRadius:5, pointHoverRadius:8 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{backgroundColor:'rgba(15,15,35,0.95)',cornerRadius:10,padding:12}}, scales:{ x:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false}}, y:{grid:{color:'rgba(148,163,184,0.06)'},border:{display:false},ticks:{stepSize:1}} }, animation:{duration:1200,easing:'easeInOutQuart'} } });
 
-  // ---- Completion Ring ----
-  new Chart(document.getElementById('chart-completion'),{
-    type:'doughnut',
-    data:{
-      datasets:[{
-        data:[pct, 100-pct],
-        backgroundColor:['rgba(52,211,153,0.9)','rgba(30,41,59,0.4)'],
-        borderColor:['#34d399','transparent'],
-        borderWidth:[2,0],
-        hoverOffset:0,
-      }]
-    },
-    options:{
-      cutout:'78%',
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      animation:{animateRotate:true,duration:1500,easing:'easeInOutQuart'},
-    }
-  });
+  new Chart(document.getElementById('chart-completion'),{ type:'doughnut', data:{ datasets:[{ data:[pct,100-pct], backgroundColor:['rgba(52,211,153,0.9)','rgba(30,41,59,0.4)'], borderColor:['#34d399','transparent'], borderWidth:[2,0], hoverOffset:0 }] }, options:{ cutout:'78%', plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{animateRotate:true,duration:1500,easing:'easeInOutQuart'} } });
   document.getElementById('completion-pct').textContent = pct + '%';
 
-  // ---- Timeline ----
   const recent = tasks.slice(0,8);
   document.getElementById('timeline').innerHTML = recent.length
-    ? recent.map(t=>`
-      <div class="timeline-item">
-        <div class="timeline-dot ${t.status==='Completed'?'dot-done':'dot-pending'}"></div>
-        <div class="timeline-body">
-          <div class="timeline-title">${t.title}</div>
-          <div class="timeline-meta">
-            <span class="task-status-badge ${t.status==='Completed'?'status-completed':'status-pending'}" style="font-size:10px; padding:2px 8px;">
-              <span class="status-dot"></span>${t.status}
-            </span>
-            ${t.deadline?`<span style="color:var(--text-muted);font-size:11px;">${t.deadline}</span>`:''}
-          </div>
-        </div>
-      </div>`).join('')
+    ? recent.map(t=>`<div class="timeline-item"><div class="timeline-dot ${t.status==='Completed'?'dot-done':'dot-pending'}"></div><div class="timeline-body"><div class="timeline-title">${t.title}</div><div class="timeline-meta"><span class="task-status-badge ${t.status==='Completed'?'status-completed':'status-pending'}" style="font-size:10px;padding:2px 8px;"><span class="status-dot"></span>${t.status}</span>${t.deadline?`<span style="color:var(--text-muted);font-size:11px;">${t.deadline}</span>`:''}</div></div></div>`).join('')
     : '<div style="text-align:center;padding:32px;color:var(--text-muted);">No activity yet</div>';
 
-  // Init tilt on dynamic cards
   if(window.VanillaTilt) VanillaTilt.init(document.querySelectorAll('[data-tilt]'),{max:8,speed:400,glare:true,'max-glare':0.05});
 
-  // Time greeting
   const h=new Date().getHours();
   const gr=document.getElementById('greeting-text');
   if(gr) gr.textContent = h<12?'Good morning ☀️':h<17?'Good afternoon 🌤️':'Good evening 🌙';
 })();
-
-document.getElementById('sidebar-toggle-btn')?.addEventListener('click', ()=>Sidebar&&Sidebar.toggle());
+</script>
+<script src="{{ url_for('static', filename='chat.js') }}"></script>
+<script>
+  // Initialize AI Chat
+  if (typeof NexusChat !== 'undefined') {
+    const chat = new NexusChat();
+    chat.init();
+  }
 </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='charts.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='chat.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -19,30 +20,12 @@
 <canvas id="particle-canvas"></canvas>
 <div class="cursor-glow"></div>
 
-<div class="app-layout">
-  {% include '_sidebar.html' %}
+<div class="app-layout-full">
+  {% set active_page = 'calendar' %}
+  {% include '_topnav.html' %}
 
-  <main class="main-content" id="main-content">
-    <header class="navbar">
-      <div class="navbar-left">
-        <!-- Mobile hamburger — shown via CSS below 992px -->
-        <button id="mobile-sidebar-toggle" class="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-        <span class="navbar-page-title">Calendar</span>
-      </div>
-      <div class="navbar-right">
-        <button id="theme-toggle" class="icon-btn" title="Toggle theme">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
-        <a href="{{ url_for('add_task') }}" class="btn btn-primary btn-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Task
-        </a>
-      </div>
-    </header>
-
-    <div class="page-content">
+  <main class="main-content main-content-full" id="main-content">
+    <div class="page-content page-content-full">
 
       <!-- Page Header -->
       <div class="welcome-hero" style="padding-bottom:var(--space-lg);">
@@ -120,7 +103,7 @@
         </div>
 
       </div><!-- /calendar-layout -->
-    </div><!-- /page-content -->
+    </div><!-- /page-content-full -->
   </main>
 </div>
 
@@ -137,10 +120,9 @@ const CAL_TASKS = {{ tasks | tojson }};
   const tasks   = CAL_TASKS;
   const today   = new Date(); today.setHours(0,0,0,0);
   let viewYear  = today.getFullYear();
-  let viewMonth = today.getMonth(); // 0-indexed
+  let viewMonth = today.getMonth();
   let selectedDate = null;
 
-  // Build a lookup: "YYYY-MM-DD" -> [tasks...]
   const taskMap = {};
   tasks.forEach(t => {
     if (!t.deadline) return;
@@ -149,28 +131,23 @@ const CAL_TASKS = {{ tasks | tojson }};
     taskMap[key].push(t);
   });
 
-  // ---- Render calendar grid ----
   function renderCalendar() {
     const grid   = document.getElementById('cal-grid');
     const label  = document.getElementById('cal-month-label');
     const month  = new Date(viewYear, viewMonth, 1);
     label.textContent = month.toLocaleString('default',{month:'long',year:'numeric'});
 
-    // Start on Monday (0=Sun→6)
-    let startDay = month.getDay(); // 0=Sun
-    startDay = startDay === 0 ? 6 : startDay - 1; // convert to Mon=0
+    let startDay = month.getDay();
+    startDay = startDay === 0 ? 6 : startDay - 1;
 
     const daysInMonth   = new Date(viewYear, viewMonth+1, 0).getDate();
     const daysInPrev    = new Date(viewYear, viewMonth, 0).getDate();
 
     let html = '';
-
-    // Prev month filler
     for (let i = startDay - 1; i >= 0; i--) {
       html += `<div class="cal-cell cal-cell-other">${daysInPrev - i}</div>`;
     }
 
-    // This month
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const cellDate = new Date(viewYear, viewMonth, d);
@@ -186,7 +163,6 @@ const CAL_TASKS = {{ tasks | tojson }};
       if (isSel)     classes += ' cal-selected';
       if (cellDate < today && !isToday) classes += ' cal-past';
 
-      // Dots
       const dots = [
         hasDone  ? '<span class="cal-dot dot-done"></span>'    : '',
         hasPend  ? '<span class="cal-dot dot-pending"></span>' : '',
@@ -200,7 +176,6 @@ const CAL_TASKS = {{ tasks | tojson }};
       </div>`;
     }
 
-    // Next month filler
     const totalCells = Math.ceil((startDay + daysInMonth) / 7) * 7;
     const remaining  = totalCells - (startDay + daysInMonth);
     for (let d = 1; d <= remaining; d++) {
@@ -212,7 +187,6 @@ const CAL_TASKS = {{ tasks | tojson }};
     renderQuickStats();
   }
 
-  // ---- Select a date ----
   window.selectDate = function(dateStr) {
     selectedDate = dateStr;
     renderCalendar();
@@ -226,11 +200,7 @@ const CAL_TASKS = {{ tasks | tojson }};
     panel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${label}`;
 
     if (!dayTasks.length) {
-      list.innerHTML = `
-        <div style="text-align:center; padding:24px 12px; color:var(--text-muted); font-size:13px;">
-          No tasks due on this date.<br>
-          <a href="/add" class="form-link" style="margin-top:8px; display:inline-block;">+ Add a task</a>
-        </div>`;
+      list.innerHTML = `<div style="text-align:center; padding:24px 12px; color:var(--text-muted); font-size:13px;">No tasks due on this date.<br><a href="/add" class="form-link" style="margin-top:8px; display:inline-block;">+ Add a task</a></div>`;
       return;
     }
 
@@ -240,16 +210,13 @@ const CAL_TASKS = {{ tasks | tojson }};
         <div class="timeline-body">
           <div class="timeline-title" style="font-size:13px;">${t.title}</div>
           <div class="timeline-meta">
-            <span class="task-status-badge ${t.status==='Completed'?'status-completed':'status-pending'}" style="font-size:10px;padding:2px 8px;">
-              <span class="status-dot"></span>${t.status}
-            </span>
+            <span class="task-status-badge ${t.status==='Completed'?'status-completed':'status-pending'}" style="font-size:10px;padding:2px 8px;"><span class="status-dot"></span>${t.status}</span>
             <a href="/edit/${t.id}" class="form-link" style="font-size:11px;">Edit</a>
           </div>
         </div>
       </div>`).join('');
   };
 
-  // ---- Upcoming 7 days ----
   function renderUpcoming() {
     const el = document.getElementById('upcoming-list');
     const upcoming = [];
@@ -261,12 +228,10 @@ const CAL_TASKS = {{ tasks | tojson }};
         if (t.status !== 'Completed') upcoming.push({...t, _date:key, _days:i});
       });
     }
-
     if (!upcoming.length) {
       el.innerHTML = '<div style="text-align:center;padding:20px 12px;color:var(--text-muted);font-size:12px;">No upcoming deadlines 🎉</div>';
       return;
     }
-
     el.innerHTML = upcoming.slice(0,6).map(t => `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
         <div style="width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -279,7 +244,6 @@ const CAL_TASKS = {{ tasks | tojson }};
       </div>`).join('');
   }
 
-  // ---- Quick Stats ----
   function renderQuickStats() {
     const total     = tasks.length;
     const completed = tasks.filter(t=>t.status==='Completed').length;
@@ -288,18 +252,12 @@ const CAL_TASKS = {{ tasks | tojson }};
 
     document.getElementById('cal-quick-stats').innerHTML = noTask
       ? '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:12px;">No tasks yet</div>'
-      : `
-        <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0;">
-          ${[
-            ['Total Tasks', total, 'var(--primary-light)'],
-            ['Completed',   completed, '#34d399'],
-            ['With Deadline', withDl, '#fbbf24'],
-          ].map(([l,v,c])=>`
+      : `<div style="display:flex;flex-direction:column;gap:8px;padding:4px 0;">
+          ${[['Total Tasks',total,'var(--primary-light)'],['Completed',completed,'#34d399'],['With Deadline',withDl,'#fbbf24']].map(([l,v,c])=>`
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
               <span style="color:var(--text-muted);">${l}</span>
               <strong style="color:${c};font-size:14px;">${v}</strong>
-            </div>
-          `).join('')}
+            </div>`).join('')}
           <div style="margin-top:4px;">
             <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;"><span>Completion</span><span>${total>0?Math.round(completed/total*100):0}%</span></div>
             <div style="background:var(--border-subtle);border-radius:4px;height:4px;overflow:hidden;">
@@ -309,26 +267,21 @@ const CAL_TASKS = {{ tasks | tojson }};
         </div>`;
   }
 
-  // ---- Nav buttons ----
-  document.getElementById('cal-prev').addEventListener('click', ()=>{
-    viewMonth--;
-    if(viewMonth<0){viewMonth=11;viewYear--;}
-    renderCalendar();
-  });
-  document.getElementById('cal-next').addEventListener('click', ()=>{
-    viewMonth++;
-    if(viewMonth>11){viewMonth=0;viewYear++;}
-    renderCalendar();
-  });
+  document.getElementById('cal-prev').addEventListener('click', ()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
+  document.getElementById('cal-next').addEventListener('click', ()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
 
-  // ---- Init ----
   renderCalendar();
-  // Auto-select today if it has tasks
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   if(taskMap[todayStr]) selectDate(todayStr);
-
-  document.getElementById('sidebar-toggle-btn')?.addEventListener('click', ()=>Sidebar&&Sidebar.toggle());
 })();
+</script>
+<script src="{{ url_for('static', filename='chat.js') }}"></script>
+<script>
+  // Initialize AI Chat
+  if (typeof NexusChat !== 'undefined') {
+    const chat = new NexusChat();
+    chat.init();
+  }
 </script>
 </body>
 </html>
