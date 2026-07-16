@@ -322,7 +322,7 @@ const Sidebar = {
 
   checkMobile() {
     const wasMobile = this.isMobile;
-    this.isMobile = window.innerWidth <= 768;
+    this.isMobile = window.innerWidth <= 991;
     
     // Reset classes when switching between mobile/desktop
     if (wasMobile !== this.isMobile) {
@@ -409,12 +409,18 @@ const Sidebar = {
     this.el?.classList.add('mobile-open');
     this.overlay?.classList.add('active');
     document.body.classList.add('sidebar-open');
+    // Update ARIA
+    const btn = document.getElementById('mobile-sidebar-toggle');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
   },
 
   closeMobile() {
     this.el?.classList.remove('mobile-open');
     this.overlay?.classList.remove('active');
     document.body.classList.remove('sidebar-open');
+    // Update ARIA
+    const btn = document.getElementById('mobile-sidebar-toggle');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
   },
 
   toggle() {
@@ -876,33 +882,6 @@ function initGreetingAnimation() {
 
 // ===== MOBILE UTILITIES =====
 (function() {
-  // Show mobile hamburger menu on mobile devices
-  function updateMobileUI() {
-    const isMobile = window.innerWidth <= 768;
-    const mobileToggle = document.getElementById('mobile-sidebar-toggle');
-    
-    if (mobileToggle) {
-      mobileToggle.style.display = isMobile ? 'flex' : 'none';
-    }
-  }
-  
-  // Run on load and resize
-  updateMobileUI();
-  window.addEventListener('resize', updateMobileUI);
-  
-  // Prevent double-tap zoom on buttons (iOS)
-  document.addEventListener('touchend', function(e) {
-    const now = Date.now();
-    const lastTouch = document.lastTouchEnd || 0;
-    
-    if (now - lastTouch <= 300 && e.target.matches('button, a, .btn')) {
-      e.preventDefault();
-      e.target.click();
-    }
-    
-    document.lastTouchEnd = now;
-  }, false);
-  
   // Fix viewport height on mobile browsers (address bar)
   function setVH() {
     const vh = window.innerHeight * 0.01;
@@ -912,4 +891,17 @@ function initGreetingAnimation() {
   setVH();
   window.addEventListener('resize', setVH);
   window.addEventListener('orientationchange', setVH);
+
+  // Prevent double-tap zoom on buttons (iOS)
+  document.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    const lastTouch = document.lastTouchEnd || 0;
+    
+    if (now - lastTouch <= 300 && e.target.matches('button, a, .btn, .hamburger-btn')) {
+      e.preventDefault();
+      e.target.click();
+    }
+    
+    document.lastTouchEnd = now;
+  }, { passive: false });
 })();

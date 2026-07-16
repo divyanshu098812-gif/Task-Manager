@@ -8,6 +8,7 @@
   top: calc(100% + 10px);
   right: 0;
   width: 380px;
+  max-width: calc(100vw - 32px);
   max-height: 520px;
   background: rgba(13, 17, 23, 0.95);
   backdrop-filter: blur(24px);
